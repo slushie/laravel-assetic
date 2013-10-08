@@ -12,8 +12,11 @@ use Assetic\Asset\GlobAsset;
 use Assetic\Asset\HttpAsset;
 use Assetic\AssetManager;
 use Assetic\Factory\AssetFactory;
+use Assetic\Filter\FilterInterface;
 use Assetic\FilterManager;
 use Config;
+use Doctrine\Common\Proxy\Exception\InvalidArgumentException;
+use URL;
 
 /**
  * Provides a front-end for Assetic collections.
@@ -21,11 +24,15 @@ use Config;
  * @package Slushie\LaravelAssetic
  */
 class Asset {
-  public $groups = array();
+  public $group = array();
+
+  /** @var FilterManager */
+  public $filters;
+
+  /** @var AssetManager */
+  public $assets;
 
   protected $namespace = 'laravel_assetic';
-  protected $filters;
-  protected $assets;
 
   public function __construct() {
     $this->createFilterManager();
@@ -33,67 +40,144 @@ class Asset {
   }
 
   /**
-   * Treat group names as dynamic attributes.
-   *
-   * @param $name
-   * @return AssetManager|null
-   */
-  public function __get($name) {
-    if (isset($this->groups[$name]))
-      return $this->groups[$name]->getAssetManager;
-
-    return null;
-  }
-
-
-  /**
-   * Create a new AssetFactory instance for the given name.
+   * Create a new AssetCollection instance for the given group.
    *
    * @param string $name
-   * @return \Assetic\Factory\AssetFactory
+   * @return \Assetic\Asset\AssetCollection
    */
-  public function createGroup($name) {
-    if (isset($this->groups[$name]))
+  public function group($name) {
+    if (isset($this->groups[$name])) {
       return $this->groups[$name];
-
-    // create factory
-    $path = public_path($this->getConfig($name, 'path', ''));
-    $factory = new AssetFactory($path);
-
-    // set managers
-    $factory->setAssetManager($this->assets);
-    $factory->setFilterManager($this->filters);
-
-    // add assets to factory
-    $assets = $this->getConfig($name, 'assets', array());
-    $filters = $this->getConfig($name, 'filters', array());
-    $factory->createAsset($assets, $filters);
-
-    return $this->group[$name] = $factory;
-  }
-
-  protected function createFilterManager() {
-    $filters = new FilterManager;
-    $config = Config::get($this->namespace . '::filters', array());
-    foreach ($config as $name => $class) {
-      $filters->set($name, new $class);
     }
 
-    return $this->filters = $filters;
+    $assets = $this->createAssetArray($name);
+    $filters = $this->createFilterArray($name);
+    $coll = new AssetCollection($assets, $filters);
+
+    if ($output = $this->getConfig($name, 'output')) {
+      $coll->setTargetPath($output);
+    }
+
+    // check output cache
+    $write_output = true;
+    $output = $coll->getTargetPath();
+    if (file_exists($output)) {
+      $output_mtime = filemtime($output);
+      $asset_mtime = $coll->getLastModified();
+
+      if ($asset_mtime && $output_mtime >= $asset_mtime) {
+        $write_output = false;
+      }
+    }
+
+    if ($write_output) {
+      file_put_contents($output, $coll->dump());
+    }
+
+    return $this->group[$name] = $coll;
+  }
+
+  /**
+   * Treat group names as dynamic properties.
+   *
+   * @param $name
+   * @return AssetCollection
+   */
+  public function __get($name) {
+    return $this->group($name);
+  }
+
+  /**
+   * Generate the URL for a given asset group.
+   *
+   * @param $name
+   * @return string
+   */
+  public function url($name) {
+    $group = $this->group($name);
+    return URL::asset($group->getTargetPath());
+  }
+
+  /**
+   * Create an array of AssetInterface objects for a group.
+   * @param $name
+   * @return array
+   */
+  protected function createAssetArray($name) {
+    $config = $this->getConfig($name, 'assets', array());
+    $assets = array();
+    foreach ($config as $asset) {
+      $assets[] = $this->assets->get($asset);
+    }
+
+    return $assets;
+  }
+
+  /**
+   * Create an array of FilterInterface objects for a group.
+   *
+   * @param $name
+   * @return array
+   */
+  protected function createFilterArray($name) {
+    $config = $this->getConfig($name, 'filters', array());
+    $filters = array();
+    foreach ($config as $filter) {
+      $filters[] = $this->filters->get($filter);
+    }
+
+    return $filters;
+  }
+
+  /**
+   * Creates the filter manager from the config file's filter array.
+   *
+   * @return FilterManager
+   */
+  protected function createFilterManager() {
+    $manager = new FilterManager();
+    $filters = Config::get($this->namespace . '::filters', array());
+    foreach ($filters as $name => $filter) {
+      $manager->set($name, $this->createFilter($filter));
+    }
+
+    return $this->filters = $manager;
+  }
+
+  /**
+   * Create a filter object from a value in the config file.
+   *
+   * @param callable|string|FilterInterface $filter
+   * @return FilterInterface
+   * @throws \InvalidArgumentException when a filter cannot be created
+   */
+  protected function createFilter($filter) {
+    if (is_callable($filter)) {
+      return call_user_func($filter);
+    }
+    else if (is_string($filter)) {
+      return new $filter;
+    }
+    else if (is_object($filter)) {
+      return $filter;
+    }
+    else {
+      throw new \InvalidArgumentException("Cannot convert $filter to filter");
+    }
   }
 
   protected function createAssetManager() {
-    $assets = new AssetManager;
+    $manager = new AssetManager;
     $config = Config::get($this->namespace . '::assets', array());
 
-    foreach ($config as $name => $refs) {
+    foreach ($config as $key => $refs) {
       if (!is_array($refs)) {
         $refs = array($refs);
       }
 
       $asset = array();
       foreach ($refs as $ref) {
-        if (starts_with($ref, 'http:')) {
+        if (starts_with($ref, 'http://')) {
           $asset[] = new HttpAsset($ref);
         }
         else if (str_contains($ref, W('* ?'))) {
@@ -105,7 +189,7 @@ class Asset {
       }
 
       if (count($asset) > 0) {
-        $assets->set($name,
+        $manager->set($key,
           count($asset) > 1
             ? new AssetCollection($asset)
             : $asset[0]
@@ -113,11 +197,11 @@ class Asset {
       }
     }
 
-    return $this->assets = $assets;
+    return $this->assets = $manager;
   }
 
-  protected function getConfig($name, $key, $default = null) {
-    return Config::get($this->namespace . "::groups.$name.$key", $default);
+  protected function getConfig($group, $key, $default = null) {
+    return Config::get($this->namespace . "::groups.$group.$key", $default);
   }
 
 }

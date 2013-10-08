@@ -11,32 +11,32 @@ return array(
    */
   'groups' => array(
     'script' => array(
-      // path is relative to the public path
-      'path' => 'script',
+      // named filters are defined below
+      'filters' => array(
+        'js-min'
+      ),
 
-      // filters are named below
-      'filters' => array('js-min')
+      // named assets defined below
+      'assets' => array(
+        'jquery'
+      ),
+
+      // optional output path, must be rewritable
+      'output' => public_path('script.js')
     ),
-
   ),
 
-  /**
-   * Define the filter names to be used in the group filter settings.
-   */
   'filters' => array(
-    'coffee'      => 'Assetic\Filter\CoffeeScriptFilter',
-    'js-min'      => 'Assetic\Filter\JSMinFilter',
-    'js-min+'     => 'Assetic\Filter\JSMinPlusFilter',
-    'js-uglify'   => 'Assetic\Filter\UglifyJsFilter',
-    'js-uglify2'  => 'Assetic\Filter\UglifyJs2Filter',
-    'css-uglify'  => 'Assetic\Filter\UglifyCssFilter',
-    'css-min'     => 'Assetic\Filter\CssMinFilter',
-    'less-php'    => 'Assetic\Filter\LessphpFilter',
-    'less'        => 'Assetic\Filter\LessFilter',
+    // filter with a closure constructor
+    'yui-js' => function() {
+      return new Assetic\Filter\Yui\JsCompressorFilter('yui-compressor.jar');
+    },
+
+    // filter with a simple class name
+    'js-min' => 'Assetic\Filter\JsMinFilter'
   ),
 
-  /**
-   * Assets can be named as well.
-   */
-  'assets' => array()
+  'assets' => array(
+    'jquery' => public_path('script/jquery.js'),
+  )
 );
