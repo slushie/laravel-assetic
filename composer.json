@@ -1,6 +1,6 @@
 {
     "name": "slushie/laravel-assetic",
-    "description": "",
+    "description": "Assetic support for Laravel 4",
     "authors": [
         {
             "name": "Josh Leder",
