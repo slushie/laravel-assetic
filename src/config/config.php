@@ -13,7 +13,7 @@ return array(
     'script' => array(
       // named filters are defined below
       'filters' => array(
-        'js-min'
+        'js_min'
       ),
 
       // named assets defined below
@@ -28,12 +28,12 @@ return array(
 
   'filters' => array(
     // filter with a closure constructor
-    'yui-js' => function() {
+    'yui_js' => function() {
       return new Assetic\Filter\Yui\JsCompressorFilter('yui-compressor.jar');
     },
 
     // filter with a simple class name
-    'js-min' => 'Assetic\Filter\JsMinFilter'
+    'js_min' => 'Assetic\Filter\JsMinFilter'
   ),
 
   'assets' => array(
