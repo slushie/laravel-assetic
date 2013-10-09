@@ -24,7 +24,7 @@ use URL;
  * @package Slushie\LaravelAssetic
  */
 class Asset {
-  public $group = array();
+  public $groups = array();
 
   /** @var FilterManager */
   public $filters;
@@ -79,7 +79,7 @@ class Asset {
       file_put_contents($output, $coll->dump());
     }
 
-    return $this->group[$name] = $coll;
+    return $this->groups[$name] = $coll;
   }
 
   /**
