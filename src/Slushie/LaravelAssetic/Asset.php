@@ -58,9 +58,14 @@ class Asset {
       $coll->setTargetPath($output);
     }
 
+    // output to public by default
+    $output = $coll->getTargetPath();
+    if (!starts_with($output, '/')) {
+      $output = public_path($output);
+    }
+
     // check output cache
     $write_output = true;
-    $output = $coll->getTargetPath();
     if (file_exists($output)) {
       $output_mtime = filemtime($output);
       $asset_mtime = $coll->getLastModified();
