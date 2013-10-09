@@ -21,8 +21,9 @@ return array(
         'jquery'
       ),
 
-      // optional output path, must be rewritable
-      'output' => public_path('script.js')
+      // optional output path (relative to /public)
+      // must be rewritable
+      'output' => 'script.js'
     ),
   ),
 
