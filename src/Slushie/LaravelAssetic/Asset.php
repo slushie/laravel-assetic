@@ -32,7 +32,7 @@ class Asset {
   /** @var AssetManager */
   public $assets;
 
-  protected $namespace = 'laravel_assetic';
+  protected $namespace = 'laravel-assetic';
 
   public function __construct() {
     $this->createFilterManager();

@@ -29,7 +29,7 @@ class LaravelAsseticServiceProvider extends ServiceProvider {
 	public function register()
 	{
 		$this->app['asset'] = $this->app->share(function() {
-      return;
+      return new Asset;
     });
 	}
 
