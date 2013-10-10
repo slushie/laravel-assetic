@@ -59,9 +59,22 @@ class Asset {
       $coll->setTargetPath($output);
     }
 
+    // check output cache
+    $write_output = true;
+    if (file_exists($output = public_path($coll->getTargetPath()))) {
+      $output_mtime = filemtime($output);
+      $asset_mtime = $coll->getLastModified();
+
+      if ($asset_mtime && $output_mtime >= $asset_mtime) {
+        $write_output = false;
+      }
+    }
+
     // store assets
-    $writer = new AssetWriter(public_path());
-    $writer->writeAsset($coll);
+    if ($write_output) {
+      $writer = new AssetWriter(public_path());
+      $writer->writeAsset($coll);
+    }
 
     return $this->groups[$name] = $coll;
   }
