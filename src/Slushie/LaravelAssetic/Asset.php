@@ -11,6 +11,7 @@ use Assetic\Asset\FileAsset;
 use Assetic\Asset\GlobAsset;
 use Assetic\Asset\HttpAsset;
 use Assetic\AssetManager;
+use Assetic\AssetWriter;
 use Assetic\Factory\AssetFactory;
 use Assetic\Filter\FilterInterface;
 use Assetic\FilterManager;
@@ -58,26 +59,9 @@ class Asset {
       $coll->setTargetPath($output);
     }
 
-    // output to public by default
-    $output = $coll->getTargetPath();
-    if (!starts_with($output, '/')) {
-      $output = public_path($output);
-    }
-
-    // check output cache
-    $write_output = true;
-    if (file_exists($output)) {
-      $output_mtime = filemtime($output);
-      $asset_mtime = $coll->getLastModified();
-
-      if ($asset_mtime && $output_mtime >= $asset_mtime) {
-        $write_output = false;
-      }
-    }
-
-    if ($write_output) {
-      file_put_contents($output, $coll->dump());
-    }
+    // store assets
+    $writer = new AssetWriter(public_path());
+    $writer->writeAsset($coll);
 
     return $this->groups[$name] = $coll;
   }
