@@ -44,9 +44,10 @@ class Asset {
    * Create a new AssetCollection instance for the given group.
    *
    * @param string $name
+   * @param bool   $overwrite force writing
    * @return \Assetic\Asset\AssetCollection
    */
-  public function group($name) {
+  public function createGroup($name, $overwrite = false) {
     if (isset($this->groups[$name])) {
       return $this->groups[$name];
     }
@@ -61,17 +62,19 @@ class Asset {
 
     // check output cache
     $write_output = true;
-    if (file_exists($output = public_path($coll->getTargetPath()))) {
-      $output_mtime = filemtime($output);
-      $asset_mtime = $coll->getLastModified();
+    if (!$overwrite) {
+      if (file_exists($output = public_path($coll->getTargetPath()))) {
+        $output_mtime = filemtime($output);
+        $asset_mtime = $coll->getLastModified();
 
-      if ($asset_mtime && $output_mtime >= $asset_mtime) {
-        $write_output = false;
+        if ($asset_mtime && $output_mtime >= $asset_mtime) {
+          $write_output = false;
+        }
       }
     }
 
     // store assets
-    if ($write_output) {
+    if ($overwrite || $write_output) {
       $writer = new AssetWriter(public_path());
       $writer->writeAsset($coll);
     }
@@ -86,7 +89,7 @@ class Asset {
    * @return AssetCollection
    */
   public function __get($name) {
-    return $this->group($name);
+    return $this->createGroup($name);
   }
 
   /**
@@ -96,8 +99,18 @@ class Asset {
    * @return string
    */
   public function url($name) {
-    $group = $this->group($name);
+    $group = $this->createGroup($name);
     return URL::asset($group->getTargetPath());
+  }
+
+  /**
+   * Returns an array of group names.
+   *
+   * @return array
+   */
+  public function listGroups() {
+    $groups = Config::get($this->namespace . '::groups', array());
+    return array_keys($groups);
   }
 
   /**
@@ -225,7 +238,7 @@ class Asset {
     else {
       if (!starts_with($asset, '/'))
         $asset = public_path($asset);
-      return new FileAsset(public_path($asset));
+      return new FileAsset($asset);
     }
   }
 

@@ -1,5 +1,6 @@
 <?php namespace Slushie\LaravelAssetic;
 
+use Artisan;
 use Illuminate\Support\ServiceProvider;
 
 class LaravelAsseticServiceProvider extends ServiceProvider {
@@ -28,10 +29,16 @@ class LaravelAsseticServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-		$this->app['asset'] = $this->app->share(function() {
+    $this->app['asset'] = $this->app->share(function() {
       return new Asset;
     });
-	}
+
+    $this->app['command.asset.warm'] = $this->app->share(function() {
+      return new AssetWarmCommand();
+    });
+
+    $this->commands('command.asset.warm');
+  }
 
 	/**
 	 * Get the services provided by the provider.
