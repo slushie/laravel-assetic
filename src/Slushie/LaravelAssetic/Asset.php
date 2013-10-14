@@ -7,6 +7,7 @@
 namespace Slushie\LaravelAssetic;
 
 use Assetic\Asset\AssetCollection;
+use Assetic\Asset\AssetInterface;
 use Assetic\Asset\FileAsset;
 use Assetic\Asset\GlobAsset;
 use Assetic\Asset\HttpAsset;
@@ -16,7 +17,6 @@ use Assetic\Factory\AssetFactory;
 use Assetic\Filter\FilterInterface;
 use Assetic\FilterManager;
 use Config;
-use Doctrine\Common\Proxy\Exception\InvalidArgumentException;
 use URL;
 
 /**
@@ -102,14 +102,27 @@ class Asset {
 
   /**
    * Create an array of AssetInterface objects for a group.
+   *
    * @param $name
+   * @throws \InvalidArgumentException for undefined assets
    * @return array
    */
   protected function createAssetArray($name) {
     $config = $this->getConfig($name, 'assets', array());
     $assets = array();
     foreach ($config as $asset) {
-      $assets[] = $this->assets->get($asset);
+      // existing asset definition
+      if ($this->assets->has($asset)) {
+        $assets[] = $this->assets->get($asset);
+      }
+      // looks like a file
+      elseif (str_contains($asset, W('/ . -'))) {
+        $assets[] = $this->parseAssetDefinition($asset);
+      }
+      // unknown asset
+      else {
+        throw new \InvalidArgumentException("No asset '$asset' defined");
+      }
     }
 
     return $assets;
@@ -179,15 +192,7 @@ class Asset {
 
       $asset = array();
       foreach ($refs as $ref) {
-        if (starts_with($ref, 'http://')) {
-          $asset[] = new HttpAsset($ref);
-        }
-        else if (str_contains($ref, W('* ?'))) {
-          $asset[] = new GlobAsset($ref);
-        }
-        else {
-          $asset[] = new FileAsset($ref);
-        }
+        $asset[] = $this->parseAssetDefinition($ref);
       }
 
       if (count($asset) > 0) {
@@ -200,6 +205,28 @@ class Asset {
     }
 
     return $this->assets = $manager;
+  }
+
+  /**
+   * Create an asset object from a string definition.
+   *
+   * @param string $asset
+   * @return AssetInterface
+   */
+  protected function parseAssetDefinition($asset) {
+    if (starts_with($asset, 'http://')) {
+      return new HttpAsset($asset);
+    }
+    else if (str_contains($asset, W('* ?'))) {
+      if (!starts_with($asset, '/'))
+        $asset = public_path($asset);
+      return new GlobAsset($asset);
+    }
+    else {
+      if (!starts_with($asset, '/'))
+        $asset = public_path($asset);
+      return new FileAsset(public_path($asset));
+    }
   }
 
   protected function getConfig($group, $key, $default = null) {
