@@ -6,8 +6,9 @@
  */
 
 return array(
-  /**
-   * Define the default configurations to be created on start.
+  /*
+   * Groups are named settings containing assets and filters,
+   * plus an output file.
    */
   'groups' => array(
     'script' => array(
@@ -18,10 +19,12 @@ return array(
 
       // named assets defined below
       'assets' => array(
-        'jquery'
+        'jquery',
+        // its also possible to include assets here directly
+        // eg, public_path('jquery-ui.js')
       ),
 
-      // optional output path (relative to /public)
+      // output path (probably relative to public)
       // must be rewritable
       'output' => 'script.js'
     ),
@@ -38,6 +41,7 @@ return array(
   ),
 
   'assets' => array(
+    // name => absolute path to asset file
     'jquery' => public_path('script/jquery.js'),
   )
 );
