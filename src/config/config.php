@@ -37,7 +37,7 @@ return array(
     },
 
     // filter with a simple class name
-    'js_min' => 'Assetic\Filter\JsMinFilter'
+    'js_min' => 'Assetic\Filter\JSMinFilter'
   ),
 
   'assets' => array(
