@@ -129,7 +129,7 @@ class Asset {
         $assets[] = $this->assets->get($asset);
       }
       // looks like a file
-      elseif (str_contains($asset, W('/ . -'))) {
+      elseif (str_contains($asset, array('/', '.', '-'))) {
         $assets[] = $this->parseAssetDefinition($asset);
       }
       // unknown asset
@@ -230,7 +230,7 @@ class Asset {
     if (starts_with($asset, 'http://')) {
       return new HttpAsset($asset);
     }
-    else if (str_contains($asset, W('* ?'))) {
+    else if (str_contains($asset, array('*', '?'))) {
       if (!starts_with($asset, '/'))
         $asset = public_path($asset);
       return new GlobAsset($asset);
