@@ -8,6 +8,18 @@ Usage
 Basic usage is relatively straightforward. The package should be installed
 via composer, and the service provider registered in your `app/config/app.php` file.
 
+    'providers' => array (
+        ...
+        'Slushie\LaravelAssetic\LaravelAsseticServiceProvider',
+        ...
+    ),
+    'aliases' => array (
+        ...
+        'Asset'           => 'Slushie\LaravelAssetic\Facades\AssetFacade',
+        ...
+    ),
+    
+    
 Once it has been installed, extract the config.php file from the package:
 
     php artisan config:publish slushie/laravel-assetic
