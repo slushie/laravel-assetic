@@ -231,19 +231,32 @@ class Asset {
       return new HttpAsset($asset);
     }
     else if (str_contains($asset, array('*', '?'))) {
-      if (!starts_with($asset, '/'))
-        $asset = public_path($asset);
-      return new GlobAsset($asset);
+      return new GlobAsset($this->absolutePath($asset));
     }
     else {
-      if (!starts_with($asset, '/'))
-        $asset = public_path($asset);
-      return new FileAsset($asset);
+      return new FileAsset($this->absolutePath($asset));
     }
   }
 
   protected function getConfig($group, $key, $default = null) {
     return Config::get($this->namespace . "::groups.$group.$key", $default);
+  }
+
+  /**
+   * Returns the absolute path for a string. Relative paths are made
+   * absolute relative to the public folder. Absolute paths are
+   * returned without change.
+   *
+   * @param string $relative_or_absolute
+   * @return string
+   */
+  protected function absolutePath($relative_or_absolute) {
+    // already absolute if path starts with / or drive letter
+    if (preg_match(',^([a-zA-Z]:|/),', $relative_or_absolute)) {
+      return $relative_or_absolute;
+    }
+
+    return public_path($relative_or_absolute);
   }
 
 }
