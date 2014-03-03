@@ -10,7 +10,7 @@
     "require": {
         "php": ">=5.3.0",
         "illuminate/support": "~4.0",
-        "kriswallsmith/assetic": "1.1.x-dev"
+        "kriswallsmith/assetic": "1.1.2"
     },
     "autoload": {
         "classmap": [
