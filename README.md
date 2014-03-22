@@ -57,12 +57,11 @@ First open the configuration file . Here you need to define filters. You can def
 
 For example,
 
-  'filters' => array(
+      'filters' => array(
     // filter with a closure constructor
     'yui_js' => function() {
       return new Assetic\Filter\Yui\JsCompressorFilter('yui-compressor.jar');
     },
-
     // filter with a simple class name
     'js_min'      => 'Assetic\Filter\JSMinFilter',
     'css_import'  => 'Assetic\Filter\CssImportFilter',
@@ -83,7 +82,7 @@ For example,
 
 you can specify diffent asset gropus as :
 
- 'groups' => array(
+    'groups' => array(
 
       /*
       * If you want add a folder then mention folderpath/*extension
