@@ -10,7 +10,7 @@ Key Features :
 2. Instant single file compilation,concatenation and minfication
 3. Multiple filters can be applied to single group
 4. Automatic file changes reflect using css-rewrite filter
-5. Assets can be compile in command-line using php artisan asset:warm --overwrite
+5. Assets can be compiled in command-line using php artisan asset:warm --overwrite
 
 Usage :
 -------
