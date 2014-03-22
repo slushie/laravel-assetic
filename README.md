@@ -70,7 +70,7 @@ For example,
     'emed_css'    => 'Assetic\Filter\PhpCssEmbedFilter',
     'coffe_script'=> 'Assetic\Filter\CoffeeScriptFilter',
     'less_php'    => 'Assetic\Filter\LessphpFilter',
-  ),
+    ),
 
 
 Adding Assets into Groups:
