@@ -1,4 +1,4 @@
-laravel-assetic
+Laravel-Assetic
 ===============
 
 Integrate Assetic(https://github.com/kriswallsmith/assetic) with Laravel 4 . Using this pacakage you can easily integrate Assetic in Laravel. You can use all the features what are there in Assetic.
@@ -160,7 +160,8 @@ you can specify diffent asset gropus as :
       // must be rewritable
       'output' => 'bast-public-less.css'
     ),
-),
+    
+   ),
 
 Using in Views:
 --------------
