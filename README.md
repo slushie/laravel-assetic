@@ -159,9 +159,8 @@ you can specify diffent asset gropus as :
       // output path (probably relative to public)
       // must be rewritable
       'output' => 'bast-public-less.css'
-    ),
-    
-   ),
+            ),
+       ),
 
 Using in Views:
 --------------
