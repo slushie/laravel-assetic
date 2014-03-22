@@ -160,8 +160,7 @@ you can specify diffent asset gropus as :
       // must be rewritable
       'output' => 'bast-public-less.css'
     ),
-
-  ),
+),
 
 Using in Views:
 --------------
