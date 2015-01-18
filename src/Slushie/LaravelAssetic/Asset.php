@@ -96,11 +96,33 @@ class Asset {
    * Generate the URL for a given asset group.
    *
    * @param $name
+   * @param array $options options:
+   *    secure => bool,
+   *    md5    => bool
    * @return string
    */
-  public function url($name) {
+  public function url($name, array $options = null) {
+    $options = is_null($options) ? array() : $options;
     $group = $this->createGroup($name);
-    return URL::asset($group->getTargetPath());
+
+    $cache_buster = '';
+    if (array_get($options, 'md5', false)) {
+      $cache_buster = '?' . md5_file($this->file($name));
+    }
+
+    $secure = array_get($options, 'secure', false);
+    return URL::asset($group->getTargetPath(), $secure) . $cache_buster;
+  }
+
+  /**
+   * Get the output filename for an asset group.
+   * 
+   * @param $name
+   * @return string
+   */
+  public function file($name) {
+    $group = $this->createGroup($name);
+    return public_path($group->getTargetPath()));
   }
 
   /**
