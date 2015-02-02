@@ -13,7 +13,6 @@ use Assetic\Asset\GlobAsset;
 use Assetic\Asset\HttpAsset;
 use Assetic\AssetManager;
 use Assetic\AssetWriter;
-use Assetic\Factory\AssetFactory;
 use Assetic\Filter\FilterInterface;
 use Assetic\FilterManager;
 use Config;
@@ -24,261 +23,271 @@ use URL;
  *
  * @package Slushie\LaravelAssetic
  */
-class Asset {
-  public $groups = array();
+class Asset
+{
+    public $groups = array();
 
-  /** @var FilterManager */
-  public $filters;
+    /** @var FilterManager */
+    public $filters;
 
-  /** @var AssetManager */
-  public $assets;
+    /** @var AssetManager */
+    public $assets;
 
-  protected $namespace = 'laravel-assetic';
+    protected $namespace = 'laravel-assetic';
 
-  public function __construct() {
-    $this->createFilterManager();
-    $this->createAssetManager();
-  }
-
-  /**
-   * Create a new AssetCollection instance for the given group.
-   *
-   * @param string $name
-   * @param bool   $overwrite force writing
-   * @return \Assetic\Asset\AssetCollection
-   */
-  public function createGroup($name, $overwrite = false) {
-    if (isset($this->groups[$name])) {
-      return $this->groups[$name];
+    public function __construct()
+    {
+        $this->createFilterManager();
+        $this->createAssetManager();
     }
 
-    $assets = $this->createAssetArray($name);
-    $filters = $this->createFilterArray($name);
-    $coll = new AssetCollection($assets, $filters);
-
-    if ($output = $this->getConfig($name, 'output')) {
-      $coll->setTargetPath($output);
-    }
-
-    // check output cache
-    $write_output = true;
-    if (!$overwrite) {
-      if (file_exists($output = public_path($coll->getTargetPath()))) {
-        $output_mtime = filemtime($output);
-        $asset_mtime = $coll->getLastModified();
-
-        if ($asset_mtime && $output_mtime >= $asset_mtime) {
-          $write_output = false;
+    /**
+     * Create a new AssetCollection instance for the given group.
+     *
+     * @param  string                         $name
+     * @param  bool                           $overwrite force writing
+     * @return \Assetic\Asset\AssetCollection
+     */
+    public function createGroup($name, $overwrite = false)
+    {
+        if (isset($this->groups[$name])) {
+            return $this->groups[$name];
         }
-      }
+
+        $assets = $this->createAssetArray($name);
+        $filters = $this->createFilterArray($name);
+        $coll = new AssetCollection($assets, $filters);
+
+        if ($output = $this->getConfig($name, 'output')) {
+            $coll->setTargetPath($output);
+        }
+
+        // check output cache
+        $write_output = true;
+        if (!$overwrite) {
+            if (file_exists($output = public_path($coll->getTargetPath()))) {
+                $output_mtime = filemtime($output);
+                $asset_mtime = $coll->getLastModified();
+
+                if ($asset_mtime && $output_mtime >= $asset_mtime) {
+                    $write_output = false;
+                }
+            }
+        }
+
+        // store assets
+        if ($overwrite || $write_output) {
+            $writer = new AssetWriter(public_path());
+            $writer->writeAsset($coll);
+        }
+
+        return $this->groups[$name] = $coll;
     }
 
-    // store assets
-    if ($overwrite || $write_output) {
-      $writer = new AssetWriter(public_path());
-      $writer->writeAsset($coll);
+    /**
+     * Treat group names as dynamic properties.
+     *
+     * @param $name
+     * @return AssetCollection
+     */
+    public function __get($name)
+    {
+        return $this->createGroup($name);
     }
 
-    return $this->groups[$name] = $coll;
-  }
+    /**
+     * Generate the URL for a given asset group.
+     *
+     * @param $name
+     * @param  array  $options options: array(secure => bool, md5 => bool)
+     * @return string
+     */
+    public function url($name, array $options = null)
+    {
+        $options = is_null($options) ? array() : $options;
+        $group = $this->createGroup($name);
 
-  /**
-   * Treat group names as dynamic properties.
-   *
-   * @param $name
-   * @return AssetCollection
-   */
-  public function __get($name) {
-    return $this->createGroup($name);
-  }
+        $cache_buster = '';
+        if (array_get($options, 'md5', false)) {
+            $cache_buster = '?'.md5_file($this->file($name));
+        }
 
-  /**
-   * Generate the URL for a given asset group.
-   *
-   * @param $name
-   * @param array $options options:
-   *    secure => bool,
-   *    md5    => bool
-   * @return string
-   */
-  public function url($name, array $options = null) {
-    $options = is_null($options) ? array() : $options;
-    $group = $this->createGroup($name);
+        $secure = array_get($options, 'secure', false);
 
-    $cache_buster = '';
-    if (array_get($options, 'md5', false)) {
-      $cache_buster = '?' . md5_file($this->file($name));
+        return URL::asset($group->getTargetPath(), $secure).$cache_buster;
     }
 
-    $secure = array_get($options, 'secure', false);
-    return URL::asset($group->getTargetPath(), $secure) . $cache_buster;
-  }
+    /**
+     * Get the output filename for an asset group.
+     *
+     * @param $name
+     * @return string
+     */
+    public function file($name)
+    {
+        $group = $this->createGroup($name);
 
-  /**
-   * Get the output filename for an asset group.
-   * 
-   * @param $name
-   * @return string
-   */
-  public function file($name) {
-    $group = $this->createGroup($name);
-    return public_path($group->getTargetPath());
-  }
-
-  /**
-   * Returns an array of group names.
-   *
-   * @return array
-   */
-  public function listGroups() {
-    $groups = Config::get($this->namespace . '::groups', array());
-    return array_keys($groups);
-  }
-
-  /**
-   * Create an array of AssetInterface objects for a group.
-   *
-   * @param $name
-   * @throws \InvalidArgumentException for undefined assets
-   * @return array
-   */
-  protected function createAssetArray($name) {
-    $config = $this->getConfig($name, 'assets', array());
-    $assets = array();
-    foreach ($config as $asset) {
-      // existing asset definition
-      if ($this->assets->has($asset)) {
-        $assets[] = $this->assets->get($asset);
-      }
-      // looks like a file
-      elseif (str_contains($asset, array('/', '.', '-'))) {
-        $assets[] = $this->parseAssetDefinition($asset);
-      }
-      // unknown asset
-      else {
-        throw new \InvalidArgumentException("No asset '$asset' defined");
-      }
+        return public_path($group->getTargetPath());
     }
 
-    return $assets;
-  }
+    /**
+     * Returns an array of group names.
+     *
+     * @return array
+     */
+    public function listGroups()
+    {
+        $groups = Config::get($this->namespace.'::groups', array());
 
-  /**
-   * Create an array of FilterInterface objects for a group.
-   *
-   * @param $name
-   * @return array
-   */
-  protected function createFilterArray($name) {
-    $config = $this->getConfig($name, 'filters', array());
-    $filters = array();
-    foreach ($config as $filter) {
-      $filters[] = $this->filters->get($filter);
+        return array_keys($groups);
     }
 
-    return $filters;
-  }
+    /**
+     * Create an array of AssetInterface objects for a group.
+     *
+     * @param $name
+     * @throws \InvalidArgumentException for undefined assets
+     * @return array
+     */
+    protected function createAssetArray($name)
+    {
+        $config = $this->getConfig($name, 'assets', array());
+        $assets = array();
+        foreach ($config as $asset) {
+            // existing asset definition
+            if ($this->assets->has($asset)) {
+                $assets[] = $this->assets->get($asset);
+            }
+            // looks like a file
+            elseif (str_contains($asset, array('/', '.', '-'))) {
+                $assets[] = $this->parseAssetDefinition($asset);
+            }
+            // unknown asset
+            else {
+                throw new \InvalidArgumentException("No asset '$asset' defined");
+            }
+        }
 
-  /**
-   * Creates the filter manager from the config file's filter array.
-   *
-   * @return FilterManager
-   */
-  protected function createFilterManager() {
-    $manager = new FilterManager();
-    $filters = Config::get($this->namespace . '::filters', array());
-    foreach ($filters as $name => $filter) {
-      $manager->set($name, $this->createFilter($filter));
+        return $assets;
     }
 
-    return $this->filters = $manager;
-  }
+    /**
+     * Create an array of FilterInterface objects for a group.
+     *
+     * @param $name
+     * @return array
+     */
+    protected function createFilterArray($name)
+    {
+        $config = $this->getConfig($name, 'filters', array());
+        $filters = array();
+        foreach ($config as $filter) {
+            $filters[] = $this->filters->get($filter);
+        }
 
-  /**
-   * Create a filter object from a value in the config file.
-   *
-   * @param callable|string|FilterInterface $filter
-   * @return FilterInterface
-   * @throws \InvalidArgumentException when a filter cannot be created
-   */
-  protected function createFilter($filter) {
-    if (is_callable($filter)) {
-      return call_user_func($filter);
-    }
-    else if (is_string($filter)) {
-      return new $filter;
-    }
-    else if (is_object($filter)) {
-      return $filter;
-    }
-    else {
-      throw new \InvalidArgumentException("Cannot convert $filter to filter");
-    }
-  }
-
-  protected function createAssetManager() {
-    $manager = new AssetManager;
-    $config = Config::get($this->namespace . '::assets', array());
-
-    foreach ($config as $key => $refs) {
-      if (!is_array($refs)) {
-        $refs = array($refs);
-      }
-
-      $asset = array();
-      foreach ($refs as $ref) {
-        $asset[] = $this->parseAssetDefinition($ref);
-      }
-
-      if (count($asset) > 0) {
-        $manager->set($key,
-          count($asset) > 1
-            ? new AssetCollection($asset)
-            : $asset[0]
-        );
-      }
+        return $filters;
     }
 
-    return $this->assets = $manager;
-  }
+    /**
+     * Creates the filter manager from the config file's filter array.
+     *
+     * @return FilterManager
+     */
+    protected function createFilterManager()
+    {
+        $manager = new FilterManager();
+        $filters = Config::get($this->namespace.'::filters', array());
+        foreach ($filters as $name => $filter) {
+            $manager->set($name, $this->createFilter($filter));
+        }
 
-  /**
-   * Create an asset object from a string definition.
-   *
-   * @param string $asset
-   * @return AssetInterface
-   */
-  protected function parseAssetDefinition($asset) {
-    if (starts_with($asset, 'http://')) {
-      return new HttpAsset($asset);
-    }
-    else if (str_contains($asset, array('*', '?'))) {
-      return new GlobAsset($this->absolutePath($asset));
-    }
-    else {
-      return new FileAsset($this->absolutePath($asset));
-    }
-  }
-
-  protected function getConfig($group, $key, $default = null) {
-    return Config::get($this->namespace . "::groups.$group.$key", $default);
-  }
-
-  /**
-   * Returns the absolute path for a string. Relative paths are made
-   * absolute relative to the public folder. Absolute paths are
-   * returned without change.
-   *
-   * @param string $relative_or_absolute
-   * @return string
-   */
-  protected function absolutePath($relative_or_absolute) {
-    // already absolute if path starts with / or drive letter
-    if (preg_match(',^([a-zA-Z]:|/),', $relative_or_absolute)) {
-      return $relative_or_absolute;
+        return $this->filters = $manager;
     }
 
-    return public_path($relative_or_absolute);
-  }
+    /**
+     * Create a filter object from a value in the config file.
+     *
+     * @param  callable|string|FilterInterface $filter
+     * @return FilterInterface
+     * @throws \InvalidArgumentException       when a filter cannot be created
+     */
+    protected function createFilter($filter)
+    {
+        if (is_callable($filter)) {
+            return call_user_func($filter);
+        } elseif (is_string($filter)) {
+            return new $filter();
+        } elseif (is_object($filter)) {
+            return $filter;
+        } else {
+            throw new \InvalidArgumentException("Cannot convert $filter to filter");
+        }
+    }
 
+    protected function createAssetManager()
+    {
+        $manager = new AssetManager();
+        $config = Config::get($this->namespace.'::assets', array());
+
+        foreach ($config as $key => $refs) {
+            if (!is_array($refs)) {
+                $refs = array($refs);
+            }
+
+            $asset = array();
+            foreach ($refs as $ref) {
+                $asset[] = $this->parseAssetDefinition($ref);
+            }
+
+            if (count($asset) > 0) {
+                $manager->set($key,
+                    count($asset) > 1
+                    ? new AssetCollection($asset)
+                    : $asset[0]
+                );
+            }
+        }
+
+        return $this->assets = $manager;
+    }
+
+    /**
+     * Create an asset object from a string definition.
+     *
+     * @param  string         $asset
+     * @return AssetInterface
+     */
+    protected function parseAssetDefinition($asset)
+    {
+        if (starts_with($asset, 'http://')) {
+            return new HttpAsset($asset);
+        } elseif (str_contains($asset, array('*', '?'))) {
+            return new GlobAsset($this->absolutePath($asset));
+        } else {
+            return new FileAsset($this->absolutePath($asset));
+        }
+    }
+
+    protected function getConfig($group, $key, $default = null)
+    {
+        return Config::get($this->namespace."::groups.$group.$key", $default);
+    }
+
+    /**
+     * Returns the absolute path for a string. Relative paths are made
+     * absolute relative to the public folder. Absolute paths are
+     * returned without change.
+     *
+     * @param  string $relative_or_absolute
+     * @return string
+     */
+    protected function absolutePath($relative_or_absolute)
+    {
+        // already absolute if path starts with / or drive letter
+        if (preg_match(',^([a-zA-Z]:|/),', $relative_or_absolute)) {
+            return $relative_or_absolute;
+        }
+
+        return public_path($relative_or_absolute);
+    }
 }
