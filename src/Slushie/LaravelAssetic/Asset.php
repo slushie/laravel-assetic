@@ -122,7 +122,7 @@ class Asset {
    */
   public function file($name) {
     $group = $this->createGroup($name);
-    return public_path($group->getTargetPath()));
+    return public_path($group->getTargetPath());
   }
 
   /**
