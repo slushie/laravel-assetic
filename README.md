@@ -157,7 +157,7 @@ For example,
 Using in Views
 --------------
 
-Once defined, your groups can then be accessed from within your views using the `Asset` facade. To link to the `singlejs-main` group, you can use the `Asset::url()` method as follows:
+Once defined, your groups can then be accessed from within your views using the `Asset` facade. To link to the `singlejs-main` group, you can use the `Asset::url()` method as follows . But we must use group name and shouldn't use 'output=>' path name :
 
     <script src="<?php echo Asset::url('singlejs-main'); ?>"></script>
 
