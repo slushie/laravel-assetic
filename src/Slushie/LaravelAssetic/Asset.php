@@ -33,12 +33,18 @@ class Asset
     /** @var AssetManager */
     public $assets;
 
+    protected $md5;
+    protected $secure;
+
     protected $namespace = 'laravel-assetic';
 
     public function __construct()
     {
         $this->createFilterManager();
         $this->createAssetManager();
+
+        $this->md5 = Config::get($this->namespace . '::md5', true);
+        $this->secure = Config::get($this->namespace . '::secure', true);
     }
 
     /**
@@ -108,11 +114,11 @@ class Asset
         $group = $this->createGroup($name);
 
         $cache_buster = '';
-        if (array_get($options, 'md5', false)) {
+        if (array_get($options, 'md5', $this->md5)) {
             $cache_buster = '?'.md5_file($this->file($name));
         }
 
-        $secure = array_get($options, 'secure', false);
+        $secure = array_get($options, 'secure', $this->secure);
 
         return URL::asset($group->getTargetPath(), $secure).$cache_buster;
     }
