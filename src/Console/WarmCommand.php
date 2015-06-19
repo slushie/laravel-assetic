@@ -21,24 +21,13 @@ class WarmCommand extends Command
     protected $description = 'Generate asset output to disk.';
 
     /**
-     * Create a new command instance.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
-     *
-     * @return void
      */
     public function fire()
     {
-        /** @var Asset $assets */
         $assets = $this->laravel['asset'];
-
         $group = $this->argument('group');
+
         if (is_null($group)) {
             $group = $assets->listGroups();
         } else {
@@ -60,9 +49,13 @@ class WarmCommand extends Command
      */
     protected function getArguments()
     {
-        return array(
-            array('group', InputArgument::OPTIONAL, 'Name of the asset group to warm.'),
-        );
+        return [
+            [
+                'group',
+                InputArgument::OPTIONAL,
+                'Name of the asset group to warm.',
+            ],
+        ];
     }
 
     /**
@@ -72,13 +65,13 @@ class WarmCommand extends Command
      */
     protected function getOptions()
     {
-        return array(
-            array(
+        return [
+            [
                 'overwrite',
                 null,
                 InputOption::VALUE_NONE,
                 'Force overwrite of output.',
-            ),
-        );
+            ],
+        ];
     }
 }
