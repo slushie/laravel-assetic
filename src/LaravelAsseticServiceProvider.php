@@ -1,6 +1,7 @@
 <?php namespace Slushie\LaravelAssetic;
 
 use Illuminate\Support\ServiceProvider;
+use Slushie\LaravelAssetic\Console\WarmCommand;
 
 class LaravelAsseticServiceProvider extends ServiceProvider
 {
@@ -16,7 +17,7 @@ class LaravelAsseticServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $configPath = __DIR__.'/../../config/config.php';
+        $configPath = __DIR__.'/../config/config.php';
         $this->publishes([
             $configPath => config_path('laravel-assetic.php'),
         ], 'config');
@@ -32,7 +33,7 @@ class LaravelAsseticServiceProvider extends ServiceProvider
         });
 
         $this->app['command.asset.warm'] = $this->app->share(function () {
-            return new AssetWarmCommand();
+            return new WarmCommand();
         });
 
         $this->commands('command.asset.warm');
@@ -45,6 +46,6 @@ class LaravelAsseticServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return array('asset');
+        return ['asset'];
     }
 }

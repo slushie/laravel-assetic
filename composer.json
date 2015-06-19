@@ -17,8 +17,8 @@
     "kriswallsmith/assetic": "1.1.*"
   },
   "autoload": {
-    "psr-0": {
-      "Slushie\\LaravelAssetic": "src/"
+    "psr-4": {
+      "Slushie\\LaravelAssetic\\": "src/"
     }
   },
   "minimum-stability": "dev"
