@@ -1,10 +1,4 @@
-<?php
-/**
- * Author: Josh Leder <slushie@gmail.com>
- * Created: 10/7/13 @ 11:24 AM
- */
-
-namespace Slushie\LaravelAssetic;
+<?php namespace Slushie\LaravelAssetic;
 
 use Assetic\Asset\AssetCollection;
 use Assetic\Asset\AssetInterface;
@@ -18,11 +12,6 @@ use Assetic\FilterManager;
 use Config;
 use URL;
 
-/**
- * Provides a front-end for Assetic collections.
- *
- * @package Slushie\LaravelAssetic
- */
 class Asset
 {
     public $groups = array();
