@@ -13,18 +13,17 @@ class LaravelAsseticServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap the application events.
-     *
-     * @return void
      */
     public function boot()
     {
-        $this->package('slushie/laravel-assetic');
+        $configPath = __DIR__.'/../../config/config.php';
+        $this->publishes([
+            $configPath => config_path('laravel-assetic.php'),
+        ], 'config');
     }
 
     /**
      * Register the service provider.
-     *
-     * @return void
      */
     public function register()
     {

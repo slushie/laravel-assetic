@@ -25,15 +25,13 @@ class Asset
     protected $md5;
     protected $secure;
 
-    protected $namespace = 'laravel-assetic';
-
     public function __construct()
     {
         $this->createFilterManager();
         $this->createAssetManager();
 
-        $this->md5 = Config::get($this->namespace . '::md5', false);
-        $this->secure = Config::get($this->namespace . '::secure', false);
+        $this->md5 = $this->getConfig('md5', true);
+        $this->secure = $this->getConfig('secure', true);
     }
 
     /**
@@ -53,7 +51,7 @@ class Asset
         $filters = $this->createFilterArray($name);
         $coll = new AssetCollection($assets, $filters);
 
-        if ($output = $this->getConfig($name, 'output')) {
+        if ($output = $this->getGroupConfig($name, 'output')) {
             $coll->setTargetPath($output);
         }
 
@@ -132,7 +130,7 @@ class Asset
      */
     public function listGroups()
     {
-        $groups = Config::get($this->namespace.'::groups', array());
+        $groups = $this->getConfig('groups', []);
 
         return array_keys($groups);
     }
@@ -146,7 +144,7 @@ class Asset
      */
     protected function createAssetArray($name)
     {
-        $config = $this->getConfig($name, 'assets', array());
+        $config = $this->getGroupConfig($name, 'assets', array());
         $assets = array();
         foreach ($config as $asset) {
             // existing asset definition
@@ -174,7 +172,7 @@ class Asset
      */
     protected function createFilterArray($name)
     {
-        $config = $this->getConfig($name, 'filters', array());
+        $config = $this->getGroupConfig($name, 'filters', array());
         $filters = array();
         foreach ($config as $filter) {
             $filters[] = $this->filters->get($filter);
@@ -191,7 +189,7 @@ class Asset
     protected function createFilterManager()
     {
         $manager = new FilterManager();
-        $filters = Config::get($this->namespace.'::filters', array());
+        $filters = $this->getConfig('filters', []);
         foreach ($filters as $name => $filter) {
             $manager->set($name, $this->createFilter($filter));
         }
@@ -222,7 +220,7 @@ class Asset
     protected function createAssetManager()
     {
         $manager = new AssetManager();
-        $config = Config::get($this->namespace.'::assets', array());
+        $config = $this->getConfig('assets', []);
 
         foreach ($config as $key => $refs) {
             if (!is_array($refs)) {
@@ -263,9 +261,14 @@ class Asset
         }
     }
 
-    protected function getConfig($group, $key, $default = null)
+    protected function getGroupConfig($group, $key, $default = null)
     {
-        return Config::get($this->namespace."::groups.$group.$key", $default);
+        return $this->getConfig("groups.$group.$key", $default);
+    }
+
+    protected function getConfig($key, $default = null)
+    {
+        return Config::get('laravel-assetic.'.$key, $default);
     }
 
     /**
