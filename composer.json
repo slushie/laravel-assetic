@@ -1,20 +1,24 @@
 {
   "name": "slushie/laravel-assetic",
-  "description": "Assetic support for Laravel 4",
+  "description": "Assetic support for Laravel 4 and 5",
   "authors": [
     {
       "name": "Josh Leder",
       "email": "slushie@gmail.com"
+    },
+    {
+      "name": "Tony Li",
+      "email": "tonyli.lives@gmail.com"
     }
   ],
   "require": {
-    "php": ">=5.3.0",
-    "illuminate/support": "~4.0",
-    "kriswallsmith/assetic": "1.1.2"
+    "php": ">=5.4.0",
+    "illuminate/support": "5.0.*|5.1.*",
+    "kriswallsmith/assetic": "1.1.*"
   },
   "autoload": {
-    "psr-0": {
-      "Slushie\\LaravelAssetic": "src/"
+    "psr-4": {
+      "Slushie\\LaravelAssetic\\": "src/"
     }
   },
   "minimum-stability": "dev"
