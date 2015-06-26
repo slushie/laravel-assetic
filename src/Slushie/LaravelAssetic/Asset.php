@@ -32,8 +32,8 @@ class Asset
         $this->createFilterManager();
         $this->createAssetManager();
 
-        $this->md5 = Config::get($this->namespace . '::md5', true);
-        $this->secure = Config::get($this->namespace . '::secure', true);
+        $this->md5 = Config::get($this->namespace . '::md5', false);
+        $this->secure = Config::get($this->namespace . '::secure', false);
     }
 
     /**
