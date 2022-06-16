@@ -1,12 +1,10 @@
-<?php
-
-namespace Slushie\LaravelAssetic;
+<?php namespace Slushie\LaravelAssetic\Console;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-class AssetWarmCommand extends Command
+class WarmCommand extends Command
 {
     /**
      * The console command name.
@@ -22,25 +20,14 @@ class AssetWarmCommand extends Command
      */
     protected $description = 'Generate asset output to disk.';
 
-  /**
-   * Create a new command instance.
-   */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     /**
      * Execute the console command.
-     *
-     * @return void
      */
     public function fire()
     {
-        /** @var Asset $assets */
-    $assets = $this->laravel['asset'];
-
+        $assets = $this->laravel['asset'];
         $group = $this->argument('group');
+
         if (is_null($group)) {
             $group = $assets->listGroups();
         } else {
@@ -62,9 +49,13 @@ class AssetWarmCommand extends Command
      */
     protected function getArguments()
     {
-        return array(
-            array('group', InputArgument::OPTIONAL, 'Name of the asset group to warm.'),
-        );
+        return [
+            [
+                'group',
+                InputArgument::OPTIONAL,
+                'Name of the asset group to warm.',
+            ],
+        ];
     }
 
     /**
@@ -74,13 +65,13 @@ class AssetWarmCommand extends Command
      */
     protected function getOptions()
     {
-        return array(
-            array(
+        return [
+            [
                 'overwrite',
                 null,
                 InputOption::VALUE_NONE,
                 'Force overwrite of output.',
-            ),
-        );
+            ],
+        ];
     }
 }

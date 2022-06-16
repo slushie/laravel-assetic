@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
     /*
     |--------------------------------------------------------------------------
     | Default Settings
@@ -11,8 +11,8 @@ return array(
     |
      */
 
-    'secure' => false,
-    'md5'    => false,
+    'secure' => true,
+    'md5'    => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -28,44 +28,44 @@ return array(
     |
      */
 
-    'groups' => array(
-        'main_js' => array(
-            'filters' => array(
+    'groups' => [
+        'main_js' => [
+            'filters' => [
                 'js_min',
-            ),
-            'assets' => array(
+            ],
+            'assets' => [
                 'jquery',                       // Named asset defined below
                 'assets/js/common/search.js',   // Single file
-                'assets/js/coolarize/*js',      // Folder inclusion
-            ),
+                'assets/js/colarize/*js',       // Folder inclusion
+            ],
             'output' => 'scripts.js',           // Writable output relative to public_path()
-        ),
-        'main_css' => array(
-            'filters' => array(
+        ],
+        'main_css' => [
+            'filters' => [
                 'css_import',
                 'css_rewrite',
                 'css_min',
-            ),
-            'assets' => array(
+            ],
+            'assets' => [
                 'assets/css/bootstrap/css/bootstrap.min.css',
                 'assets/css/font-awesome/css/font-awesome.css',
                 'assets/css/prettyPhoto/css/*css',
-            ),
+            ],
             'output' => 'vendors.css'
-        ),
-        'main_less' => array(
-            'filters' => array(
+        ],
+        'main_less' => [
+            'filters' => [
                 'css_import',
                 'css_rewrite',
                 'less_php',
                 'css_min'
-            ),
-            'assets' => array(
+            ],
+            'assets' => [
                 'assets/less/master.less'
-            ),
+            ],
             'output' => 'styles.css'
-        ),
-    ),
+        ],
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -77,7 +77,7 @@ return array(
     |
      */
 
-    'filters' => array(
+    'filters' => [
         'css_min'       => 'Assetic\Filter\CssMinFilter',
         'css_import'    => 'Assetic\Filter\CssImportFilter',
         'css_rewrite'   => 'Assetic\Filter\CssRewriteFilter',
@@ -88,7 +88,7 @@ return array(
         'yui_js' => function () {
             return new Assetic\Filter\Yui\JsCompressorFilter('yui-compressor.jar');
         },
-    ),
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -99,7 +99,7 @@ return array(
     |
      */
 
-    'assets' => array(
+    'assets' => [
         'jquery' => 'assets/javascripts/jquery.js',
-    )
-);
+    ],
+];

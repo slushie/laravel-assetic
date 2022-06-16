@@ -1,6 +1,6 @@
 # Laravel-Assetic
 
-Easily integrate [Assetic](https://github.com/kriswallsmith/assetic) with Laravel 4.
+Easily integrate [Assetic](https://github.com/kriswallsmith/assetic) with Laravel 4 or 5.
 
 [![Total Downloads](https://poser.pugx.org/slushie/laravel-assetic/downloads.svg)](https://packagist.org/packages/slushie/laravel-assetic)
 [![Latest Stable Version](https://poser.pugx.org/slushie/laravel-assetic/v/stable.svg)](https://packagist.org/packages/slushie/laravel-assetic)
@@ -15,70 +15,68 @@ Easily integrate [Assetic](https://github.com/kriswallsmith/assetic) with Larave
 4. Automatically updates output files when their inputs have been changed.
 5. Pre-compile assets using `artisan asset:warm`.
 
-## Usage
+## Contents
 
-Add to your composer.json:
+- [Installation](#install)
+- [Groups](#groups)
+- [Filters](#filters)
+- [Views](#views)
+- [More Information](#more-information)
+
+## Installation
+
+The recommended way to install is through [Composer](http://getcomposer.org).
+
+Update the project's composer.json file to include Laravel-Assetic:
+
+- Laravel 5: use the 2.\* releases.
+- **Laravel 4: use the 1.\* releases**.
 
 ```json
-"require": {
-    "laravel/framework": "4.0.*",
-    "slushie/laravel-assetic": "dev-master",
-    "lmammino/jsmin4assetic": "1.0.0",
-    "leafo/lessphp": "0.4.0"
+{
+    "require": {
+        "slushie/laravel-assetic": "1.*"
+    }
 }
 ```
 
-After running `composer update`, you need to add the service provider (and optionally, alias the `Asset` facade) in your `app/config/app.php` file:
+Then update the project dependencies to include this library:
+
+```bash
+composer update slushie/laravel-assetic
+```
+
+After installing, add the service provider and optional `Asset` facade in `config/app.php`:
 
 ```php
-'providers' => array(
+'providers' => [
     ...
     'Slushie\LaravelAssetic\LaravelAsseticServiceProvider',
     ...
-),
-
-'aliases' => array(
+],
+'aliases' => [
     ...
-    'Asset'           => 'Slushie\LaravelAssetic\Facades\AssetFacade',
+    'Asset' => 'Slushie\LaravelAssetic\Facades\Asset',
     ...
-),
+],
 ```
 
-Once your app's configuration has been updated, generate the package config:
+Once the app's configuration has been updated, publish the package config:
 
 ```bash
-php artisan config:publish slushie/laravel-assetic
+php artisan vendor:publish
 ```
 
 Now the laravel-assetic configuration file will be available at:
 
 ```
-app/config/packages/slushie/laravel-assetic/config.php
+config/laravel-assetic.php
 ```
 
-Finally, edit the configuration file file to define your assets.
+Finally, edit the configuration file to define your assets.
 You can define multiple groups, each with different filters and assets.
 
-## Defining Filters
-
-Filters are defined within the package configuration file.
-
-```php
-'filters' => array(
-    'css_min'       => 'Assetic\Filter\CssMinFilter',
-    'css_import'    => 'Assetic\Filter\CssImportFilter',
-    'css_rewrite'   => 'Assetic\Filter\CssRewriteFilter',
-    'embed_css'     => 'Assetic\Filter\PhpCssEmbedFilter',
-    'less_php'      => 'Assetic\Filter\LessphpFilter',
-    'js_min'        => 'Assetic\Filter\JSMinFilter',
-    'coffee_script' => 'Assetic\Filter\CoffeeScriptFilter',
-    'yui_js' => function () {
-        return new Assetic\Filter\Yui\JsCompressorFilter('yui-compressor.jar');
-    },
-),
-```
-
-## Adding Assets to Groups
+## Groups
 
 Each group defines `assets` and `filters` as inputs, and an `output` file that should be included in your view.
 
@@ -98,20 +96,47 @@ Each group defines `assets` and `filters` as inputs, and an `output` file that s
 ),
 ```
 
-## Using Assets in Views
+## Filters
+
+Filters are defined within the package configuration file.
+They are applied to the supplied asset files.
+Use a closure to instantiate filters that may not have default constructor arguments.
+
+```php
+'filters' => array(
+    'css_min'       => 'Assetic\Filter\CssMinFilter',
+    'css_import'    => 'Assetic\Filter\CssImportFilter',
+    'css_rewrite'   => 'Assetic\Filter\CssRewriteFilter',
+    'embed_css'     => 'Assetic\Filter\PhpCssEmbedFilter',
+    'less_php'      => 'Assetic\Filter\LessphpFilter',
+    'js_min'        => 'Assetic\Filter\JSMinFilter',
+    'coffee_script' => 'Assetic\Filter\CoffeeScriptFilter',
+    'yui_js' => function () {
+        return new Assetic\Filter\Yui\JsCompressorFilter('yui-compressor.jar');
+    },
+),
+```
+
+## Views
 
 Once defined, your groups can then be accessed from within your views using the `Asset` facade.
-To link to the `main_js` group, you can use the `Asset::url()` method as follows:
+To link to the `main_js` group, use the `Asset::url()` method as follows:
 
 ```html
-<script src="<?php echo Asset::url('main_js'); ?>"></script>
+<script src="<?= Asset::url('main_js'); ?>"></script>
 ```
 
 This will output the URL to the asset file (in this example, `/scripts.js`).
 
+Options can be set so the asset generated is linked via `https://` or appended with a cache busting key:
+
+```html
+<script src="<?= Asset::url('main_js', ['md5' => true, 'secure' => true]); ?>"></script>
+```
+
 When the page loaded, Assetic will generate the file, joining all files and running the defined filters.
 
-You can also generate the asset output files via the artisan command:
+You can also pre-generate the asset output files via the artisan command:
 
 ```bash
 php artisan asset:warm
@@ -121,5 +146,5 @@ Of course, this can be performed as a composer `post-install` command to generat
 
 # More Information
 
-More information can be acquired by reading through the source, which is
-fully documented, or you may feel free to raise issues at https://github.com/slushie/laravel-assetic/issues
+More information can be acquired by reading through the source, which is fully documented.
+Feel free to raise issues at https://github.com/slushie/laravel-assetic/issues.
